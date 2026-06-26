@@ -1,0 +1,49 @@
+# Efficient PR build check for Shopizer multi-module Maven project.
+# Goals: fast feedback on every PR, cancel stale runs, cache deps, parallel compile.
+name: PR Build
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# Cancel superseded runs for the same PR (saves minutes when authors push often).
+concurrency:
+  group: pr-build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Maven compile (Java 11)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "11"
+          cache: maven
+
+      - name: Build all modules
+        # -B batch mode, -ntp quieter logs, -T 1C one thread per CPU core,
+        # package verifies compile + packaging without installing to local repo.
+        # Skip tests for PR gate speed (unit tests can be a separate workflow later).
+        run: ./mvnw -B -ntp -T 1C package -DskipTests
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-build-logs
+          path: |
+            **/target/surefire-reports/**
+            **/target/*.log
+          if-no-files-found: ignore
+          retention-days: 3
