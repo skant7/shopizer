@@ -31,10 +31,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.math.BigDecimal;
+
 import com.salesmanager.core.business.exception.ServiceException;
 import com.salesmanager.core.business.services.catalog.pricing.PricingService;
 import com.salesmanager.core.business.services.catalog.product.ProductService;
 import com.salesmanager.core.business.services.catalog.product.attribute.ProductAttributeService;
+import com.salesmanager.core.business.services.promotion.PromotionTokenService;
 import com.salesmanager.core.business.services.shoppingcart.ShoppingCartCalculationService;
 import com.salesmanager.core.business.services.shoppingcart.ShoppingCartService;
 //import com.salesmanager.core.business.utils.ProductPriceUtils;
@@ -56,6 +59,7 @@ import com.salesmanager.shop.model.shoppingcart.ShoppingCartAttribute;
 import com.salesmanager.shop.model.shoppingcart.ShoppingCartData;
 import com.salesmanager.shop.model.shoppingcart.ShoppingCartItem;
 import com.salesmanager.shop.populator.shoppingCart.ShoppingCartDataPopulator;
+import com.salesmanager.shop.store.api.exception.OperationNotAllowedException;
 import com.salesmanager.shop.store.api.exception.ResourceNotFoundException;
 import com.salesmanager.shop.store.api.exception.ServiceRuntimeException;
 import com.salesmanager.shop.utils.DateUtil;
@@ -94,6 +98,9 @@ public class ShoppingCartFacadeImpl implements ShoppingCartFacade {
 
 	@Autowired
 	private ReadableShoppingCartMapper readableShoppingCartMapper;
+
+	@Inject
+	private PromotionTokenService promotionTokenService;
 
 	public void deleteShoppingCart(final Long id, final MerchantStore store) throws Exception {
 		ShoppingCart cart = shoppingCartService.getById(id, store);
@@ -1150,15 +1157,57 @@ public class ShoppingCartFacadeImpl implements ShoppingCartFacade {
 	public ReadableShoppingCart modifyCart(String cartCode, String promo, MerchantStore store, Language language)
 			throws Exception {
 
-		ShoppingCart cart = shoppingCartService.getByCode(cartCode, store);
+		if (StringUtils.isBlank(cartCode)) {
+			throw new ResourceNotFoundException("Shopping cart code is required");
+		}
+		if (StringUtils.isBlank(promo)) {
+			throw new OperationNotAllowedException("Promotion token / coupon code is required");
+		}
 
-		cart.setPromoCode(promo);
+		ShoppingCart cart = shoppingCartService.getByCode(cartCode, store);
+		if (cart == null) {
+			throw new ResourceNotFoundException("No shopping cart found for code [" + cartCode + "]");
+		}
+
+		BigDecimal cartSubtotal = resolveCartSubtotal(cart);
+		try {
+			// Prefer admin-managed promotion tokens; fall back to legacy free-form promo codes
+			// only when no token row exists for this store (Drools may still apply).
+			if (promotionTokenService.exists(promo.trim(), store)) {
+				promotionTokenService.validateForCart(promo.trim(), store, cartSubtotal, new Date());
+			}
+		} catch (ServiceException e) {
+			throw new OperationNotAllowedException(e.getMessage() != null ? e.getMessage() : "Invalid promotion token");
+		}
+
+		cart.setPromoCode(promo.trim());
 		cart.setPromoAdded(new Date());
 
 		shoppingCartService.save(cart);
 
 		return readableShoppingCartMapper.convert(cart, store, language);
 
+	}
+
+	/**
+	 * Best-effort cart subtotal from line item prices for min-cart validation.
+	 */
+	private BigDecimal resolveCartSubtotal(ShoppingCart cart) {
+		if (cart == null || cart.getLineItems() == null || cart.getLineItems().isEmpty()) {
+			return BigDecimal.ZERO;
+		}
+		BigDecimal total = BigDecimal.ZERO;
+		for (com.salesmanager.core.model.shoppingcart.ShoppingCartItem item : cart.getLineItems()) {
+			if (item == null || item.getItemPrice() == null) {
+				continue;
+			}
+			BigDecimal line = item.getItemPrice();
+			if (item.getQuantity() > 1) {
+				line = line.multiply(BigDecimal.valueOf(item.getQuantity()));
+			}
+			total = total.add(line);
+		}
+		return total;
 	}
 
 }
