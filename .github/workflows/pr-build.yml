@@ -32,10 +32,10 @@ jobs:
           cache: maven
 
       - name: Build all modules
-        # -B batch mode, -ntp quieter logs, -T 1C one thread per CPU core,
-        # package verifies compile + packaging without installing to local repo.
-        # Skip tests for PR gate speed (unit tests can be a separate workflow later).
-        run: ./mvnw -B -ntp -T 1C package -DskipTests
+        # Wrapper ships Maven 3.5.2 (no -ntp). Use -B batch mode + -T 1C for
+        # parallel reactor builds. package verifies compile/packaging; skip tests
+        # for fast PR feedback (unit tests can be a separate workflow later).
+        run: chmod +x mvnw && ./mvnw -B -T 1C package -DskipTests
 
       - name: Upload build logs on failure
         if: failure()
