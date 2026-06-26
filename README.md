@@ -1,8 +1,6 @@
-# Shopizer 3 (for java 17 +) (tested with Java 11, 17)
+# Shopizer 3 (Java 11 / 17+)
 
-3.2.7
-
-
+**3.2.7**
 
 [![last_version](https://img.shields.io/badge/last_version-v3.2.7-blue.svg?style=flat)](https://github.com/shopizer-ecommerce/shopizer/tree/3.2.7)
 [![Official site](https://img.shields.io/website-up-down-green-red/https/shields.io.svg?label=official%20site)](http://www.shopizer.com/)
@@ -10,10 +8,9 @@
 [![stackoverflow](https://img.shields.io/badge/shopizer-stackoverflow-orange.svg?style=flat)](http://stackoverflow.com/questions/tagged/shopizer)
 [![CircleCI](https://circleci.com/gh/shopizer-ecommerce/shopizer.svg?style=svg)](https://circleci.com/gh/shopizer-ecommerce/shopizer)
 
+Java open source e-commerce software.
 
-Java open source e-commerce software
-
-Headless commerce and Rest api for ecommerce
+Headless commerce and REST API for ecommerce:
 
 - Catalog
 - Shopping cart
@@ -23,126 +20,99 @@ Headless commerce and Rest api for ecommerce
 - Customer
 - User
 
-Shopizer Headless commerce consists of the following components:
+Access the headless API: <http://localhost:8080/swagger-ui.html>
 
+## Demo
 
-Access the headless api: http://localhost:8080/swagger-ui.html
+See the demo: **New demo on the way 2025** — headless demo available soon.
 
+## Run with Docker
 
-See the demo: [**New demo on the way 2025]
--------------------
-Headless demo Available soon
+### 1. Backend (Java API)
 
-1.  Run from Docker images:
-
-From the command line:
-
-```
+```bash
 docker run -p 8080:8080 shopizerecomm/shopizer:latest
 ```
-       
-2. Run the administration tool
 
-⋅⋅⋅ Requires the java backend to be running
+### 2. Administration tool
 
-```
+Requires the Java backend to be running.
+
+```bash
 docker run \
- -e "APP_BASE_URL=http://localhost:8080/api" \
- -p 82:80 shopizerecomm/shopizer-admin
+  -e "APP_BASE_URL=http://localhost:8080/api" \
+  -p 82:80 shopizerecomm/shopizer-admin
 ```
 
+### 3. React shop sample site
 
-3. Run react shop sample site
+Requires the Java backend to be running.
 
-⋅⋅⋅ Requires the java backend to be running
-
-```
+```bash
 docker run \
- -e "APP_MERCHANT=DEFAULT"
- -e "APP_BASE_URL=http://localhost:8080"
- -p 80:80 shopizerecomm/shopizer-shop-reactjs
+  -e "APP_MERCHANT=DEFAULT" \
+  -e "APP_BASE_URL=http://localhost:8080" \
+  -p 80:80 shopizerecomm/shopizer-shop-reactjs
 ```
 
-API documentation:
--------------------
+## Get the source code
 
+```bash
+git clone git://github.com/shopizer-ecommerce/shopizer.git
+```
 
-Get the source code:
--------------------
-Clone the repository:
-     
-	 $ git clone git://github.com/shopizer-ecommerce/shopizer.git
-	 
+## Build the application
 
-To build the application:
--------------------
+### 1. Shopizer backend
 
-1. Shopizer backend
+```bash
+cd shopizer
+./mvnw clean install
+cd sm-shop
+./mvnw spring-boot:run
+```
 
+### 2. Shopizer admin
 
-From the command line:
+For compiling and running Shopizer admin, consult the admin repository README.
 
-	$ cd shopizer
-	$ mvnw clean install
-	$ cd sm-shop
-	$ mvnw spring-boot:run
+### 3. Shop sample site
 
-2. Shopizer admin
+For compiling and running the shop sample site, consult that repository’s README.
 
-Form compiling and running Shopizer admin consult the repo README file
+## Access the application
 
-3. Shop sample site
+Headless web application (Swagger UI): <http://localhost:8080/swagger-ui.html>
 
-Form compiling and running Shopizer admin consult the repo README file
+The steps above run the application with default settings. See the project documentation for connecting to MySQL, configuring email, and other subsystems.
 
+## Documentation
 
-### Access the application:
--------------------
+- Documentation: [shopizer-ecommerce.github.io/documentation](https://shopizer-ecommerce.github.io/documentation/)
+- API (local Swagger UI): <http://localhost:8080/swagger-ui/index.html>
+- Slack: [shopizer.slack.com](https://shopizer.slack.com) — join via [Community Inviter](https://communityinviter.com/apps/shopizer/shopizer)
+- Website: [shopizer.com](http://www.shopizer.com)
 
-Access the headless web application at: http://localhost:8080/swagger-ui.html
+## Participation
 
+If you want to give feedback or participate in the Shopizer project, use the [contact form](http://www.shopizer.com/contact.html) and share your email so we can invite you to Slack.
 
-The instructions above will let you run the application with default settings and configurations.
-Please read the instructions on how to connect to MySQL, configure an email server and configure other subsystems
+## How to contribute
 
+1. Fork the repository to your GitHub account.
 
-### Documentation:
--------------------
+2. Clone your fork:
 
-Documentation available [<https://shopizer-ecommerce.github.io/documentation/>](http://localhost:8080/swagger-ui/index.html)
+   ```bash
+   git clone https://github.com/yourusername/shopizer.git
+   ```
 
-ChatOps <https://shopizer.slack.com>  - Join our Slack channel <https://communityinviter.com/apps/shopizer/shopizer>
+3. Build the application using the steps above.
 
-More information is available on shopizer web site here <http://www.shopizer.com>
+4. Create a feature branch:
 
-### Participation:
--------------------
+   ```bash
+   git checkout -b branch-name
+   ```
 
-If you have interest in giving feedback or for participating to Shopizer project in any way
-Feel to use the contact form <http://www.shopizer.com/contact.html> and share your email address
-so we can send an invite to our Slack channel
-
-### How to Contribute:
--------------------
-Fork the repository to your GitHub account
-
-Clone from fork repository
--------------------
-
-       $ git clone https://github.com/yourusername/shopizer.git
-
-Build application according to steps provided above
-
-
-Create new branch in your repository
--------------------
-
-	   $ git checkout -b branch-name
-
-
-Push your changes to Shopizer
--------------------
-
-Please open a PR (pull request) in order to have your changes merged to the upstream
-
-
+5. Push your changes and open a pull request against the upstream repository so your work can be reviewed and merged.
